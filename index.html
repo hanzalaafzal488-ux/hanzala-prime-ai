@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ur" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#101b35">
+  <link rel="manifest" href="/manifest.json">
+  <title>HANZALA AI</title>
+  <style>
+    *{box-sizing:border-box} body{margin:0;background:#0b1428;color:#fff;font-family:system-ui,-apple-system,"Noto Nastaliq Urdu",sans-serif}
+    main{max-width:620px;margin:auto;min-height:100dvh;padding:22px 16px 30px;display:flex;flex-direction:column}
+    header{display:flex;align-items:center;gap:12px;margin:8px 0 22px}.logo{width:48px;height:48px;border-radius:15px;background:linear-gradient(135deg,#65b7ff,#4258d5);display:grid;place-items:center;font-size:25px}
+    h1{font-size:25px;margin:0}.sub{color:#aebbd5;font-size:13px}.hero{background:linear-gradient(145deg,#172a50,#101b35);border:1px solid #30466d;border-radius:24px;padding:22px 18px;text-align:center}
+    .orb{width:112px;height:112px;border-radius:50%;margin:8px auto 16px;background:radial-gradient(circle at 35% 30%,#a9e5ff,#4388e9 45%,#253d9c 75%);box-shadow:0 0 42px #397ce866;display:grid;place-items:center;font-size:43px}
+    h2{margin:5px 0;font-size:22px}.muted{color:#b8c7e5;font-size:14px;line-height:1.7}
+    .controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:18px 0}.btn{border:0;border-radius:14px;padding:13px 17px;background:#315fd2;color:white;font-size:15px;font-weight:650}.btn.secondary{background:#263a5d}.btn:disabled{opacity:.5}
+    textarea{width:100%;min-height:95px;border:1px solid #405274;border-radius:16px;background:#121f38;color:white;padding:14px;font-size:16px;resize:vertical;outline:none}
+    .row{display:flex;gap:9px;margin-top:10px}.row .btn{flex:1}.answer{white-space:pre-wrap;line-height:1.9;background:#121f38;border:1px solid #2c4166;border-radius:16px;padding:16px;margin-top:16px;min-height:76px}
+    .status{font-size:13px;color:#9db8e8;margin:12px 2px}.notice{font-size:12px;color:#aebbd5;line-height:1.7;margin-top:18px}
+    input[type=file]{display:none} footer{margin-top:auto;padding-top:25px;text-align:center;color:#7183a5;font-size:11px}
+  </style>
+</head>
+<body>
+<main>
+  <header><div class="logo">✦</div><div><h1>HANZALA AI</h1><div class="sub">آپ کا ذاتی ذہین معاون</div></div></header>
+  <section class="hero">
+    <div class="orb">✧</div>
+    <h2>میں آپ کی بات سن رہا ہوں</h2>
+    <div class="muted">سوال لکھیں، آواز سے پوچھیں یا تصویر دکھا کر اس کے بارے میں سوال کریں۔</div>
+    <div class="controls">
+      <button class="btn" id="mic">🎙 آواز سے پوچھیں</button>
+      <button class="btn secondary" id="photo">📷 تصویر منتخب کریں</button>
+      <input id="file" type="file" accept="image/*" capture="environment">
+    </div>
+  </section>
+  <div class="status" id="status">تیار ہوں۔ اپنا سوال لکھیں۔</div>
+  <textarea id="question" placeholder="مثلاً: اس تصویر میں کیا نظر آ رہا ہے؟"></textarea>
+  <div class="row"><button class="btn" id="send">جواب حاصل کریں</button><button class="btn secondary" id="speak" disabled>🔊 سنیں</button></div>
+  <div class="answer" id="answer">آپ کا جواب یہاں ظاہر ہوگا۔</div>
+  <div class="notice">رازداری: تصویر صرف آپ کے سوال کا جواب دینے کے لیے سرور کو بھیجی جائے گی۔ صرف چہرہ دیکھ کر کسی شخص کا نام یا شناخت معلوم نہیں کی جا سکتی۔ شناخت کے لیے اس شخص کی رضامندی اور خود فراہم کردہ پروفائل درکار ہوگی۔</div>
+  <footer>HANZALA AI · ابتدائی موبائل ورژن</footer>
+</main>
+<script>
+let selectedImage = null;
+const $ = id => document.getElementById(id);
+$('photo').onclick=()=>$('file').click();
+$('file').onchange=async e=>{
+  const f=e.target.files[0]; if(!f)return;
+  if(f.size>5*1024*1024){$('status').textContent='تصویر 5MB سے چھوٹی منتخب کریں۔';return;}
+  selectedImage=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result.split(',')[1]);r.onerror=reject;r.readAsDataURL(f)});
+  $('status').textContent='تصویر شامل ہوگئی۔ اب سوال لکھیں۔';
+};
+$('mic').onclick=()=>{
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){$('status').textContent='اس براؤزر میں آواز کی سہولت دستیاب نہیں۔';return;}
+  const r=new SR();r.lang='ur-PK';r.onstart=()=>$('status').textContent='سن رہا ہوں...';
+  r.onresult=e=>{$('question').value=e.results[0][0].transcript;$('status').textContent='آپ کی بات درج ہوگئی۔'};
+  r.onerror=()=>$('status').textContent='آواز واضح نہیں آئی۔ دوبارہ کوشش کریں۔';r.start();
+};
+$('send').onclick=async()=>{
+  const question=$('question').value.trim();
+  if(!question&&!selectedImage){$('status').textContent='پہلے سوال لکھیں یا تصویر منتخب کریں۔';return;}
+  $('send').disabled=true;$('status').textContent='HANZALA AI جواب تیار کر رہا ہے...';
+  try{
+    const res=await fetch('/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,imageBase64:selectedImage})});
+    const data=await res.json();if(!res.ok)throw new Error(data.answer||'سرور میں مسئلہ ہے۔');
+    $('answer').textContent=data.answer||'جواب موصول نہیں ہوا۔';$('speak').disabled=false;$('status').textContent='جواب آگیا۔';selectedImage=null;
+  }catch(e){$('status').textContent='رابطہ نہیں ہوسکا: '+e.message;}
+  finally{$('send').disabled=false;}
+};
+$('speak').onclick=()=>{const u=new SpeechSynthesisUtterance($('answer').textContent);u.lang='ur-PK';speechSynthesis.cancel();speechSynthesis.speak(u);};
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+</script>
+</body></html>
